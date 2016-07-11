@@ -56,16 +56,18 @@ module Google
       def self.make_creds(options = {})
         json_key_io, scope = options.values_at(:json_key_io, :scope)
         if json_key_io
-          private_key, client_email = read_json_key(json_key_io)
+          private_key, client_email, sub_email = read_json_key(json_key_io)
         else
           private_key = ENV[CredentialsLoader::PRIVATE_KEY_VAR]
           client_email = ENV[CredentialsLoader::CLIENT_EMAIL_VAR]
+          sub_email = ENV[CredentialsLoader::SUB_EMAIL_VAR]
         end
 
         new(token_credential_uri: TOKEN_CRED_URI,
             audience: TOKEN_CRED_URI,
             scope: scope,
             issuer: client_email,
+            sub: sub_email,
             signing_key: OpenSSL::PKey::RSA.new(private_key))
       end
 
@@ -75,7 +77,7 @@ module Google
         json_key = MultiJson.load(json_key_io.read)
         fail 'missing client_email' unless json_key.key?('client_email')
         fail 'missing private_key' unless json_key.key?('private_key')
-        [json_key['private_key'], json_key['client_email']]
+        [json_key['private_key'], json_key['client_email'], json_key['sub_email']]
       end
 
       def initialize(options = {})
